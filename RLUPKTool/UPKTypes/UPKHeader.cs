@@ -4,7 +4,7 @@ using System.IO;
 namespace RLUPKTool.Core
 {
     // .upk file header
-    public class FPackageFileSummary : IUESerializable
+    public class UPKHeader : IUESerializable
 	{
 		private const uint PACKAGE_FILE_TAG = 0x9E2A83C1;
 

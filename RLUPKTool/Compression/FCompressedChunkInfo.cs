@@ -8,11 +8,11 @@ namespace RLUPKTool.Core
 	{
 		public long UncompressedOffset, CompressedOffset;
 		public int UncompressedSize, CompressedSize;
-		private FPackageFileSummary Sum;
+		private UPKHeader Sum;
 
 		public FCompressedChunkInfo() { }
 
-		public FCompressedChunkInfo(FPackageFileSummary InSum)
+		public FCompressedChunkInfo(UPKHeader InSum)
 		{
 			Sum = InSum;
 		}

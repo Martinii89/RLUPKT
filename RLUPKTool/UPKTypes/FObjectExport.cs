@@ -20,9 +20,9 @@ namespace RLUPKTool.Core
 		public int PackageFlags;
 
 		// To check versions
-		private FPackageFileSummary Sum;
+		private UPKHeader Sum;
 
-		public FObjectExport(FPackageFileSummary InSum)
+		public FObjectExport(UPKHeader InSum)
 		{
 			Sum = InSum;
 		}
