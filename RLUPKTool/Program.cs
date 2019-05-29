@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Security.Cryptography;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
@@ -391,7 +390,7 @@ namespace RLUPKTool
 
 					if ((Sum.CompressionFlags & ECompressionFlags.COMPRESS_ZLIB) == 0)
 					{
-						throw new Exception("Unsupported CompressionFlags");
+						throw new InvalidDataException($"Unsupported CompressionFlags: {Sum.CompressionFlags}");
 					}
 
 					// Decrypt the rest of the package header
@@ -458,11 +457,11 @@ namespace RLUPKTool
 							{
 								var CompressedData = new byte[Block.CompressedSize];
 								Input.Read(CompressedData, 0, CompressedData.Length);
-
-								// Zlib inflate
-								var ZlibStream = new InflaterInputStream(new MemoryStream(CompressedData));
-								ZlibStream.CopyTo(Output);
-							}
+                                using (var ZlibStream = new InflaterInputStream(new MemoryStream(CompressedData)))
+                                {
+                                    ZlibStream.CopyTo(Output);
+                                }
+                            }
 						}
 					}
 				}
@@ -471,27 +470,38 @@ namespace RLUPKTool
 
 		static void Main(string[] args)
 		{
-			if (args.Count() < 1)
+			if (args.Count() < 4 || args[0] != "-f" || args[2] != "-o")
 			{
-				Console.WriteLine("Usage: RLUPKTool <package path>");
+				Console.WriteLine("Usage: RLUPKTool -f <folder with packages> -o <decrypted folder>");
 				return;
 			}
 
-			foreach (var Path in args)
-			{
-				if (!args[0].EndsWith(".upk"))
-				{
-					Console.Error.WriteLine($"\"{args[0]}\" should have a .upk extension.");
-					continue;
-				}
-				if (args[0].EndsWith("_decrypted.upk"))
-				{
-					Console.Error.WriteLine("File is already decrypted.");
-					continue;
-				}
-
-				ProcessFile(Path, Path.Replace(".upk", "_decrypted.upk"));
-			}
+            var inputFolder = args[1];
+            var outputFolder = args[3];
+            Console.WriteLine(inputFolder);
+            Console.WriteLine(outputFolder);
+            foreach(var file in Directory.EnumerateFiles(inputFolder, "*.upk"))
+            {
+                if (file.EndsWith("_decrypted.upk"))
+                {
+                    Console.Error.WriteLine("File is already decrypted.");
+                    continue;
+                }
+                var inputFileName = Path.GetFileNameWithoutExtension(file);
+                var outputFilePath = Path.Combine(outputFolder, inputFileName + "_decrypted.upk");
+                new FileInfo(outputFilePath).Directory.Create();
+                Console.WriteLine($"Processing: {inputFileName}");
+                try
+                {
+                    ProcessFile(file, outputFilePath);
+                }catch(InvalidDataException e)
+                {
+                    Console.WriteLine("Exception caught: {0}", e);
+                }catch(OutOfMemoryException e)
+                {
+                    Console.WriteLine("Exception caught: {0}", e);
+                }
+            }
 		}
 	}
 }
