@@ -1,8 +1,10 @@
 ﻿using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using RLUPKTool.Core.Compression;
+using RLUPKTool.Core.UPKTTypes;
+using RLUPKTool.Core.UTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 
 namespace RLUPKTool.Core
@@ -20,7 +22,7 @@ namespace RLUPKTool.Core
     {
         public string FilePath { get; private set; }
         public UPKHeader Header { get; private set; }
-        public DeserializationState deserializationState { get; private set; }
+        public DeserializationState DeserializationState { get; private set; }
 
         private int EncryptedSize
         {
@@ -45,18 +47,18 @@ namespace RLUPKTool.Core
         {
             using (var binaryReader = new BinaryReader(File.OpenRead(FilePath)))
             {
-                _DeserializeHeader(binaryReader);
+                DeserializeHeader(binaryReader);
             }
         }
 
-        private void _DeserializeHeader(BinaryReader binaryReader)
+        private void DeserializeHeader(BinaryReader binaryReader)
         {
             Header = new UPKHeader();
             Header.Deserialize(binaryReader);
-            deserializationState |= DeserializationState.Header;
+            DeserializationState |= DeserializationState.Header;
         }
 
-        public bool IsHeaderDeserialized => ((deserializationState & DeserializationState.Header) != 0);
+        public bool IsHeaderDeserialized => ((DeserializationState & DeserializationState.Header) != 0);
 
         public bool IsCompresionTypeSupported
         {
@@ -82,14 +84,14 @@ namespace RLUPKTool.Core
             }
             //Decrypt encrypted data.
             var decryptedData = DecryptData(decryptor);
-            deserializationState |= DeserializationState.Decrypted;
+            DeserializationState |= DeserializationState.Decrypted;
 
             //Deserialize compressed chunk info
             var chunkInfo = DeserializeCompressedChunkInfo(decryptedData);
 
             //Uncompress and save to output
             UncompressAndWrite(outputStream, decryptedData, chunkInfo);
-            deserializationState |= DeserializationState.Inflated;
+            DeserializationState |= DeserializationState.Inflated;
         }
 
         private byte[] DecryptData(ICryptoTransform decryptor)
@@ -100,13 +102,12 @@ namespace RLUPKTool.Core
                 if (!IsHeaderDeserialized)
                 {
                     binaryReader.BaseStream.Position = 0;
-                    _DeserializeHeader(binaryReader);
+                    DeserializeHeader(binaryReader);
                 }
                 binaryReader.BaseStream.Position = Header.NameOffset;
                 binaryReader.Read(encryptedData, 0, encryptedData.Length);
             }
-            var decryptedData = decryptor.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
-            return decryptedData;
+            return decryptor.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
         }
 
         private TArray<FCompressedChunkInfo> DeserializeCompressedChunkInfo(byte[] decryptedData)
@@ -166,86 +167,6 @@ namespace RLUPKTool.Core
                             zlibStream.CopyTo(outputStream);
                         }
                     }
-                }
-            }
-        }
-    }
-
-    internal class Program
-    {
-        public static byte[] AESKey =
-        {
-            0xC7, 0xDF, 0x6B, 0x13, 0x25, 0x2A, 0xCC, 0x71,
-            0x47, 0xBB, 0x51, 0xC9, 0x8A, 0xD7, 0xE3, 0x4B,
-            0x7F, 0xE5, 0x00, 0xB7, 0x7F, 0xA5, 0xFA, 0xB2,
-            0x93, 0xE2, 0xF2, 0x4E, 0x6B, 0x17, 0xE7, 0x79
-        };
-
-        // AES decrypt with Rocket League's key
-        private static byte[] Decrypt(byte[] Buffer)
-        {
-            var Rijndael = new RijndaelManaged
-            {
-                KeySize = 256,
-                Key = AESKey,
-                Mode = CipherMode.ECB,
-                Padding = PaddingMode.None
-            };
-
-            var Decryptor = Rijndael.CreateDecryptor();
-            return Decryptor.TransformFinalBlock(Buffer, 0, Buffer.Length);
-        }
-
-        private static void ProcessFile(string filePath, string outputPath)
-        {
-            using (var output = File.Open(outputPath, FileMode.Create))
-            {
-                var upkFile = new UPKFile(filePath);
-                upkFile.Decrypt(new RijndaelManaged
-                {
-                    KeySize = 256,
-                    Key = AESKey,
-                    Mode = CipherMode.ECB,
-                    Padding = PaddingMode.None
-                }.CreateDecryptor(),
-                output);
-            }
-        }
-
-        private static void Main(string[] args)
-        {
-            if (args.Count() < 4 || args[0] != "-f" || args[2] != "-o")
-            {
-                Console.WriteLine("Usage: RLUPKTool -f <folder with packages> -o <decrypted folder>");
-                return;
-            }
-
-            var inputFolder = args[1];
-            var outputFolder = args[3];
-            Console.WriteLine(inputFolder);
-            Console.WriteLine(outputFolder);
-            foreach (var file in Directory.EnumerateFiles(inputFolder, "*.upk"))
-            {
-                if (file.EndsWith("_decrypted.upk"))
-                {
-                    Console.Error.WriteLine("File is already decrypted.");
-                    continue;
-                }
-                var inputFileName = Path.GetFileNameWithoutExtension(file);
-                var outputFilePath = Path.Combine(outputFolder, inputFileName + "_decrypted.upk");
-                new FileInfo(outputFilePath).Directory.Create();
-                Console.WriteLine($"Processing: {inputFileName}");
-                try
-                {
-                    ProcessFile(file, outputFilePath);
-                }
-                catch (InvalidDataException e)
-                {
-                    Console.WriteLine("Exception caught: {0}", e);
-                }
-                catch (OutOfMemoryException e)
-                {
-                    Console.WriteLine("Exception caught: {0}", e);
                 }
             }
         }

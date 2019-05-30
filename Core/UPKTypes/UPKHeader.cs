@@ -1,7 +1,9 @@
-﻿using System;
+﻿using RLUPKTool.Core.Compression;
+using RLUPKTool.Core.UTypes;
+using System;
 using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.UPKTTypes
 {
     // .upk file header
     public class UPKHeader : IUESerializable

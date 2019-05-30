@@ -1,6 +1,7 @@
-﻿using System.IO;
+﻿using RLUPKTool.Core.UTypes;
+using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.UPKTTypes
 {
     // The array of these in WHEEL_Atlantis_SF.upk has the following values
     // 0x100, 0x100, 1, 2, 0, { 0xD }

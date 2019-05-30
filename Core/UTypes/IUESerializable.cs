@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.UTypes
 {
     // Anything that can be serialized to/from an FArchive
     // Must also implement a default constructor

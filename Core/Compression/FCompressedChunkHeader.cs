@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.Compression
 {
     // Pointed to by FCompressedChunkInfo
     public class FCompressedChunkHeader

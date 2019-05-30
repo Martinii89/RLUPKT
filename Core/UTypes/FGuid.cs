@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.UTypes
 {
     public class FGuid : IUESerializable
 	{

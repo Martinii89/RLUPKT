@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.Compression
 {
     // From UE4 source
     [Flags]

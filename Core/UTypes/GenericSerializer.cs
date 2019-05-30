@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.UTypes
 {
     // To allow implementing serialization for base types
     public static class GenericSerializer

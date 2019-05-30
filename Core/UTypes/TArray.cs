@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace RLUPKTool.Core
+namespace RLUPKTool.Core.UTypes
 {
     // List wrapper with Unreal array serialization methods
     public class TArray<T> : List<T>, IUESerializable where T : new()
