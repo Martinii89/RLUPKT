@@ -34,7 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>RLUPKTool.Program</StartupObject>
+    <StartupObject>RLUPKTool.Core.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib, Version=1.1.0.145, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
@@ -50,36 +50,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compression\ECompressionFlags.cs" />
+    <Compile Include="Compression\FCompressedChunkBlock.cs" />
+    <Compile Include="Compression\FCompressedChunkHeader.cs" />
+    <Compile Include="Compression\FCompressedChunkInfo.cs" />
+    <Compile Include="UTypes\GenericSerializer.cs" />
+    <Compile Include="UTypes\IUESerializable.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Checksum\Adler32.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Checksum\IChecksum.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\Exceptions\SharpZipBaseException.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\Exceptions\StreamDecodingException.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\Exceptions\StreamUnsupportedException.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\Exceptions\UnexpectedEndOfStreamException.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\Exceptions\ValueOutOfRangeException.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\FileSystemScanner.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\INameTransform.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\InvalidNameException.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\IScanFilter.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\NameFilter.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\PathFilter.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\StreamUtils.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Core\WindowsPathUtils.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\Deflater.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterConstants.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterEngine.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterHuffman.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterPending.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\Inflater.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\InflaterDynHeader.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\InflaterHuffmanTree.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\PendingBuffer.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\Streams\InflaterInputStream.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\Streams\OutputWindow.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\Compression\Streams\StreamManipulator.cs" />
-    <Compile Include="SharpZipLib\src\ICSharpCode.SharpZipLib\Zip\ZipException.cs" />
+    <Compile Include="UPKTypes\FGenerationInfo.cs" />
+    <Compile Include="UPKTypes\FObjectExport.cs" />
+    <Compile Include="UPKTypes\FUnknownTypeInSummary.cs" />
+    <Compile Include="UPKTypes\UPKHeader.cs" />
+    <Compile Include="UTypes\FGuid.cs" />
+    <Compile Include="UTypes\FString.cs" />
+    <Compile Include="UTypes\TArray.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

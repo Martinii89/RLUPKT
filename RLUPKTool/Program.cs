@@ -16,68 +16,158 @@ namespace RLUPKTool.Core
         Inflated = 4,
     }
 
-    internal class UPKFile
+    public class UPKFile
     {
-        private BinaryReader _stream;
-        public UPKHeader header;
-        public DeserializationState deserializationState;
+        public string FilePath { get; private set; }
+        public UPKHeader Header { get; private set; }
+        public DeserializationState deserializationState { get; private set; }
 
-        public int EncryptedSize
+        private int EncryptedSize
         {
             get
             {
-                if (!IsHeaderDeserialized())
+                if (!IsHeaderDeserialized)
                 {
                     DeserializeHeader();
                 }
-                var _encryptedSize = header.TotalHeaderSize - header.GarbageSize - header.NameOffset;
+                var _encryptedSize = Header.TotalHeaderSize - Header.GarbageSize - Header.NameOffset;
                 _encryptedSize = (_encryptedSize + 15) & ~15; // Round up to the next block
                 return _encryptedSize;
             }
         }
 
-        public UPKFile(BinaryReader stream)
+        public UPKFile(string upkFilePath)
         {
-            //Dispose of stream? iDispose?
-            _stream = stream;
+            FilePath = upkFilePath;
         }
 
         public void DeserializeHeader()
         {
-            _stream.BaseStream.Position = 0;
-            header = new UPKHeader();
-            header.Deserialize(_stream);
+            using (var binaryReader = new BinaryReader(File.OpenRead(FilePath)))
+            {
+                _DeserializeHeader(binaryReader);
+            }
+        }
+
+        private void _DeserializeHeader(BinaryReader binaryReader)
+        {
+            Header = new UPKHeader();
+            Header.Deserialize(binaryReader);
             deserializationState |= DeserializationState.Header;
         }
 
-        public bool IsHeaderDeserialized()
-        {
-            return ((deserializationState & DeserializationState.Header) != 0);
-        }
+        public bool IsHeaderDeserialized => ((deserializationState & DeserializationState.Header) != 0);
 
-        public bool IsCompresionTypeSupported()
+        public bool IsCompresionTypeSupported
         {
-            if (!IsHeaderDeserialized())
+            get
             {
-                DeserializeHeader();
+                if (!IsHeaderDeserialized)
+                {
+                    DeserializeHeader();
+                }
+                return ((Header.CompressionFlags & ECompressionFlags.COMPRESS_ZLIB) != 0);
             }
-            return ((header.CompressionFlags & ECompressionFlags.COMPRESS_ZLIB) == 0);
         }
 
         public void Decrypt<T>(ICryptoTransform decryptor, T outputStream) where T : Stream
         {
-            return;
+            if (!IsHeaderDeserialized)
+            {
+                DeserializeHeader();
+            }
+            if (!IsCompresionTypeSupported)
+            {
+                throw new InvalidDataException($"Unsupported CompressionFlags: {Header.CompressionFlags}");
+            }
             //Decrypt encrypted data.
-            //Read compressed chunk info
-            //Deserialize compressed chunk info
-            //Write original data to output
-            //uncompress chunks and copy to output
+            var decryptedData = DecryptData(decryptor);
+            deserializationState |= DeserializationState.Decrypted;
 
+            //Deserialize compressed chunk info
+            var chunkInfo = DeserializeCompressedChunkInfo(decryptedData);
+
+            //Uncompress and save to output
+            UncompressAndWrite(outputStream, decryptedData, chunkInfo);
+            deserializationState |= DeserializationState.Inflated;
+        }
+
+        private byte[] DecryptData(ICryptoTransform decryptor)
+        {
             var encryptedData = new byte[EncryptedSize];
-            _stream.BaseStream.Seek(header.NameOffset, SeekOrigin.Begin);
-            _stream.Read(encryptedData, 0, encryptedData.Length);
+            using (var binaryReader = new BinaryReader(File.OpenRead(FilePath)))
+            {
+                if (!IsHeaderDeserialized)
+                {
+                    binaryReader.BaseStream.Position = 0;
+                    _DeserializeHeader(binaryReader);
+                }
+                binaryReader.BaseStream.Position = Header.NameOffset;
+                binaryReader.Read(encryptedData, 0, encryptedData.Length);
+            }
             var decryptedData = decryptor.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
-            return;
+            return decryptedData;
+        }
+
+        private TArray<FCompressedChunkInfo> DeserializeCompressedChunkInfo(byte[] decryptedData)
+        {
+            var chunkInfo = new TArray<FCompressedChunkInfo>(() => new FCompressedChunkInfo(Header));
+
+            using (var decryptedReader = new BinaryReader(new MemoryStream(decryptedData)))
+            {
+                // Get the compressed chunk info from inside the encrypted data
+                decryptedReader.BaseStream.Position = Header.CompressedChunkInfoOffset;
+                chunkInfo.Deserialize(decryptedReader);
+            }
+            return chunkInfo;
+        }
+
+        private void UncompressAndWrite<T>(T outputStream, byte[] decryptedData, TArray<FCompressedChunkInfo> chunkInfo) where T : Stream
+        {
+            using (var binaryReader = new BinaryReader(File.OpenRead(FilePath)))
+            {
+                //Copy original data to fileBuf
+                var fileBuf = new byte[binaryReader.BaseStream.Length];
+                binaryReader.BaseStream.Position = 0;
+                binaryReader.Read(fileBuf, 0, fileBuf.Length);
+
+                outputStream.Write(fileBuf, 0, fileBuf.Length);
+
+                // Write decrypted data
+                outputStream.Seek(Header.NameOffset, SeekOrigin.Begin);
+                outputStream.Write(decryptedData, 0, decryptedData.Length);
+
+                // Decompress compressed chunks
+                foreach (var chunk in chunkInfo)
+                {
+                    binaryReader.BaseStream.Position = chunk.CompressedOffset;
+                    var chunkHeader = new FCompressedChunkHeader();
+                    chunkHeader.Deserialize(binaryReader);
+
+                    var totalBlockSize = 0;
+                    var blocks = new List<FCompressedChunkBlock>();
+
+                    while (totalBlockSize < chunkHeader.Sum.UncompressedSize)
+                    {
+                        var block = new FCompressedChunkBlock();
+                        block.Deserialize(binaryReader);
+                        blocks.Add(block);
+                        totalBlockSize += block.UncompressedSize;
+                    }
+
+                    outputStream.Position = chunk.UncompressedOffset;
+
+                    foreach (var block in blocks)
+                    {
+                        var compressedData = new byte[block.CompressedSize];
+                        binaryReader.Read(compressedData, 0, compressedData.Length);
+                        using (var zlibStream = new InflaterInputStream(new MemoryStream(compressedData)))
+                        {
+                            zlibStream.CopyTo(outputStream);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -106,102 +196,19 @@ namespace RLUPKTool.Core
             return Decryptor.TransformFinalBlock(Buffer, 0, Buffer.Length);
         }
 
-        private static void ProcessFile(string Path, string OutPath)
+        private static void ProcessFile(string filePath, string outputPath)
         {
-            using (var Input = File.OpenRead(Path))
+            using (var output = File.Open(outputPath, FileMode.Create))
             {
-                using (var Reader = new BinaryReader(Input))
+                var upkFile = new UPKFile(filePath);
+                upkFile.Decrypt(new RijndaelManaged
                 {
-                    //TODO: Make UPKFILE handle the stream itself. Pass in the filePath
-                    var upkFile = new UPKFile(Reader);
-                    if (!upkFile.IsCompresionTypeSupported())
-                    {
-                        throw new InvalidDataException($"Unsupported CompressionFlags: {upkFile.header.CompressionFlags}");
-                    }
-                    //Wanted api. Currently non-functional
-                    using (var output = File.Open(OutPath, FileMode.Create))
-                    {
-                        upkFile.Decrypt(new RijndaelManaged
-                        {
-                            KeySize = 256,
-                            Key = AESKey,
-                            Mode = CipherMode.ECB,
-                            Padding = PaddingMode.None
-                        }.CreateDecryptor(),
-                        output);
-                    }
-
-                    // Decrypt the rest of the package header
-                    var encryptedSize = upkFile.EncryptedSize;
-                    var encryptedData = new byte[encryptedSize];
-
-                    Input.Seek(upkFile.header.NameOffset, SeekOrigin.Begin);
-                    Input.Read(encryptedData, 0, encryptedData.Length);
-
-                    var decryptedData = Decrypt(encryptedData);
-
-                    var chunkInfo = new TArray<FCompressedChunkInfo>(() => new FCompressedChunkInfo(upkFile.header));
-
-                    using (var decryptedStream = new MemoryStream(decryptedData))
-                    {
-                        using (var decryptedReader = new BinaryReader(decryptedStream))
-                        {
-                            // Get the compressed chunk info from inside the encrypted data
-                            decryptedStream.Seek(upkFile.header.CompressedChunkInfoOffset, SeekOrigin.Begin);
-                            chunkInfo.Deserialize(decryptedReader);
-
-                            // Store exports for reserialization
-                            //??? not usefull at all?
-                            decryptedStream.Seek(upkFile.header.ExportOffset - upkFile.header.NameOffset, SeekOrigin.Begin);
-                        }
-                    }
-
-                    // Copy the original file data
-                    var fileBuf = new byte[Input.Length];
-                    Input.Seek(0, SeekOrigin.Begin);
-                    Input.Read(fileBuf, 0, fileBuf.Length);
-
-                    // Save to output file
-                    using (var output = File.Open(OutPath, FileMode.Create))
-                    {
-                        output.Write(fileBuf, 0, fileBuf.Length);
-
-                        // Write decrypted data
-                        output.Seek(upkFile.header.NameOffset, SeekOrigin.Begin);
-                        output.Write(decryptedData, 0, decryptedData.Length);
-
-                        // Decompress compressed chunks
-                        foreach (var chunk in chunkInfo)
-                        {
-                            Input.Seek(chunk.CompressedOffset, SeekOrigin.Begin);
-                            var header = new FCompressedChunkHeader();
-                            header.Deserialize(Reader);
-
-                            var totalBlockSize = 0;
-                            var blocks = new List<FCompressedChunkBlock>();
-
-                            while (totalBlockSize < header.Sum.UncompressedSize)
-                            {
-                                var block = new FCompressedChunkBlock();
-                                block.Deserialize(Reader);
-                                blocks.Add(block);
-                                totalBlockSize += block.UncompressedSize;
-                            }
-
-                            output.Seek(chunk.UncompressedOffset, SeekOrigin.Begin);
-
-                            foreach (var block in blocks)
-                            {
-                                var compressedData = new byte[block.CompressedSize];
-                                Input.Read(compressedData, 0, compressedData.Length);
-                                using (var zlibStream = new InflaterInputStream(new MemoryStream(compressedData)))
-                                {
-                                    zlibStream.CopyTo(output);
-                                }
-                            }
-                        }
-                    }
-                }
+                    KeySize = 256,
+                    Key = AESKey,
+                    Mode = CipherMode.ECB,
+                    Padding = PaddingMode.None
+                }.CreateDecryptor(),
+                output);
             }
         }
 
