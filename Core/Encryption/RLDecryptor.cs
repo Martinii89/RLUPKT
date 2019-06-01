@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace RLUPKTool.Core.Encryption
+namespace RLUPKT.Core.Encryption
 {
     public class RLDecryptor
     {

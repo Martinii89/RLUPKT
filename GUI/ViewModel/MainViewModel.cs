@@ -23,9 +23,9 @@ namespace GUI.ViewModel
     {
 
         public string Title { get; set; }
-        private UPKFile _selectedFile;
+        private UPKFileItem _selectedFile;
 
-        public UPKFile SelectedFile {
+        public UPKFileItem SelectedFile {
             get
             {
                 return SelectedFile;
@@ -36,8 +36,8 @@ namespace GUI.ViewModel
             }
         }
 
-        private List<UPKFile> _uPKFiles;
-        public List<UPKFile> UPKFiles { get => _uPKFiles; set { Set(() => UPKFiles, ref _uPKFiles, value); }}
+        private List<UPKFileItem> _uPKFiles;
+        public List<UPKFileItem> UPKFiles { get => _uPKFiles; set { Set(() => UPKFiles, ref _uPKFiles, value); }}
 
         public RelayCommand<string> ProcessFilesCommand { get; private set; }
         public RelayCommand OpenFilesCommand { get; private set; }
@@ -54,17 +54,19 @@ namespace GUI.ViewModel
 
         private void ShowOpenFilesDialog()
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Multiselect = true;
-            openFileDialog.Filter = "UPK files (*.upk)|*.upk";
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Multiselect = true,
+                Filter = "UPK files (*.upk)|*.upk"
+            };
             if (openFileDialog.ShowDialog() == true)
             {
-                UPKFiles = new List<UPKFile>();
+                UPKFiles = new List<UPKFileItem>();
                 foreach (string filename in openFileDialog.FileNames)
                 {
                     try
                     {
-                        var upkFile = new UPKFile(filename);
+                        var upkFile = new UPKFileItem(filename);
                         UPKFiles.Add(upkFile);
                     }
                     catch (ArgumentException e)

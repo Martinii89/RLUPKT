@@ -1,7 +1,7 @@
-﻿using RLUPKTool.Core.UTypes;
+﻿using RLUPKT.Core.UTypes;
 using System.IO;
 
-namespace RLUPKTool.Core.UPKTTypes
+namespace RLUPKT.Core.UPKTTypes
 {
     // Description of an object that the package exposes
     public class FObjectExport : IUESerializable

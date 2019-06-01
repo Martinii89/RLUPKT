@@ -1,7 +1,7 @@
-﻿using RLUPKTool.Core.UTypes;
+﻿using RLUPKT.Core.UTypes;
 using System.IO;
 
-namespace RLUPKTool.Core.UPKTTypes
+namespace RLUPKT.Core.UPKTTypes
 {
     // Contained in FPackageFileSummary
     public class FGenerationInfo : IUESerializable

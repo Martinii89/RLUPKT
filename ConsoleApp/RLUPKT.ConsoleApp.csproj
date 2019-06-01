@@ -82,9 +82,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj">
+    <ProjectReference Include="..\Core\RLUPKT.Core.csproj">
       <Project>{9510381f-a17a-4846-aba8-2004e341eed1}</Project>
-      <Name>Core</Name>
+      <Name>RLUPKT.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.IO;
 
-namespace RLUPKTool.Core.UTypes
+namespace RLUPKT.Core.UTypes
 {
     // Unreal string
     public class FString : IUESerializable

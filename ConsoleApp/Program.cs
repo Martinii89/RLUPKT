@@ -1,10 +1,10 @@
-﻿using RLUPKTool.Core;
-using RLUPKTool.Core.Encryption;
+﻿using RLUPKT.Core;
+using RLUPKT.Core.Encryption;
 using System;
 using System.IO;
 using System.Linq;
 
-namespace RLUPKTool.ConsoleApp
+namespace RLUPKT.ConsoleApp
 {
 
     internal class Program

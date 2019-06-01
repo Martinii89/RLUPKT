@@ -1,13 +1,13 @@
 ﻿using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using RLUPKTool.Core.Compression;
-using RLUPKTool.Core.UPKTTypes;
-using RLUPKTool.Core.UTypes;
+using RLUPKT.Core.Compression;
+using RLUPKT.Core.UPKTTypes;
+using RLUPKT.Core.UTypes;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace RLUPKTool.Core
+namespace RLUPKT.Core
 {
     [Flags]
     public enum DeserializationState

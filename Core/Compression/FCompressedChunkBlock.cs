@@ -1,7 +1,7 @@
-﻿using RLUPKTool.Core.UTypes;
+﻿using RLUPKT.Core.UTypes;
 using System.IO;
 
-namespace RLUPKTool.Core.Compression
+namespace RLUPKT.Core.Compression
 {
     public class FCompressedChunkBlock : IUESerializable
 	{

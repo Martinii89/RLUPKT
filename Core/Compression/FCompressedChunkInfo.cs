@@ -1,8 +1,8 @@
-﻿using RLUPKTool.Core.UPKTTypes;
-using RLUPKTool.Core.UTypes;
+﻿using RLUPKT.Core.UPKTTypes;
+using RLUPKT.Core.UTypes;
 using System.IO;
 
-namespace RLUPKTool.Core.Compression
+namespace RLUPKT.Core.Compression
 {
     // Compressed data info
     // Rocket League stores this in the encrypted data rather than in the file summary
