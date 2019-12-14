@@ -14,7 +14,30 @@ namespace RLUPKT.ConsoleApp
             using (var output = File.Open(outputPath, FileMode.Create))
             {
                 var upkFile = new UPKFile(filePath);
-                upkFile.Decrypt(new RLDecryptor().GetCryptoTransform(), output);
+                for (int i = 0; i < AESKeys.KeyList.Count; i++)
+                {
+                    try
+                    {
+                        var key = AESKeys.KeyList[i];
+                        upkFile.Decrypt(new RLDecryptor().GetCryptoTransform(key), output);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        if (i + 1 != AESKeys.KeyList.Count)
+                        {
+                            continue;
+                        }else
+                        {
+                            string fileName = Path.GetFileNameWithoutExtension(filePath);
+                            Console.WriteLine($"{fileName}: Unable to decrypt. possibly wrong AES-key");
+                            output.Close();
+                            File.Delete(outputPath);
+                        }
+                        
+                    }
+                }
+                
             }
         }
 
@@ -40,7 +63,7 @@ namespace RLUPKT.ConsoleApp
                 var inputFileName = Path.GetFileNameWithoutExtension(file);
                 var outputFilePath = Path.Combine(outputFolder, inputFileName + "_decrypted.upk");
                 new FileInfo(outputFilePath).Directory.Create();
-                Console.WriteLine($"Processing: {inputFileName}");
+                //Console.WriteLine($"Processing: {inputFileName}");
                 try
                 {
                     ProcessFile(file, outputFilePath);
@@ -54,6 +77,7 @@ namespace RLUPKT.ConsoleApp
                     Console.WriteLine("Exception caught: {0}", e);
                 }
             }
+            Console.WriteLine("Finished!");
         }
     }
 }
