@@ -78,7 +78,9 @@ namespace RLUPKT.Core.Encryption
 
 
         public static List<byte[]> KeyList = new List<byte[]> { AESKey1, AESKey2, AESKey3, AESKey4, AESKey5, AESKey6, AESKey7, AESKey8, AESKey9, AESKey10, AESKey11, AESKey12 };
- 
+        public static List<int> KeyListSuccessCount = new List<int> { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+
 
     }
 

@@ -20,6 +20,7 @@ namespace RLUPKT.ConsoleApp
                     {
                         var key = AESKeys.KeyList[i];
                         upkFile.Decrypt(new RLDecryptor().GetCryptoTransform(key), output);
+                        AESKeys.KeyListSuccessCount[i] += 1;
                         break;
                     }
                     catch (Exception e)
@@ -77,7 +78,11 @@ namespace RLUPKT.ConsoleApp
                     Console.WriteLine("Exception caught: {0}", e);
                 }
             }
-            Console.WriteLine("Finished!");
+            for (int i = 0; i < AESKeys.KeyList.Count; i++)
+            {
+                Console.WriteLine("Key{0} got used {1} times", i + 1, AESKeys.KeyListSuccessCount[i]);
+            }
+                Console.WriteLine("Finished!");
         }
     }
 }
