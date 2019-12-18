@@ -1,5 +1,6 @@
 ﻿using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using RLUPKT.Core.Compression;
+using RLUPKT.Core.Encryption;
 using RLUPKT.Core.UPKTTypes;
 using RLUPKT.Core.UTypes;
 using System;
@@ -16,6 +17,14 @@ namespace RLUPKT.Core
         Header = 1,
         Decrypted = 2,
         Inflated = 4,
+    }
+
+    [Flags]
+    public enum DecryptionState
+    {
+        None = 0,
+        Success = 1,
+        Failed = 2,
     }
 
     public class UPKFile
@@ -72,7 +81,7 @@ namespace RLUPKT.Core
             }
         }
 
-        public void Decrypt<T>(ICryptoTransform decryptor, T outputStream) where T : Stream
+        private void Decrypt<T>(ICryptoTransform decryptor, T outputStream) where T : Stream
         {
             if (!IsHeaderDeserialized)
             {
@@ -92,6 +101,35 @@ namespace RLUPKT.Core
             //Uncompress and save to output
             UncompressAndWrite(outputStream, decryptedData, chunkInfo);
             DeserializationState |= DeserializationState.Inflated;
+        }
+
+        public DecryptionState Decrypt<T>(T outputStream) where T : Stream
+        {
+            for (int i = 0; i < AESKeys.KeyList.Count; i++)
+            {
+                try
+                {
+                    var key = AESKeys.KeyList[i];
+                    Decrypt(new RLDecryptor().GetCryptoTransform(key), outputStream);
+                    AESKeys.KeyListSuccessCount[i] += 1;
+                    return DecryptionState.Success;
+                }
+                catch (Exception)
+                {
+                    if (i + 1 != AESKeys.KeyList.Count)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        return DecryptionState.Failed;
+                    }
+
+                }
+            }
+
+
+            return DecryptionState.Failed;
         }
 
         private byte[] DecryptData(ICryptoTransform decryptor)

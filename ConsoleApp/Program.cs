@@ -14,31 +14,40 @@ namespace RLUPKT.ConsoleApp
             using (var output = File.Open(outputPath, FileMode.Create))
             {
                 var upkFile = new UPKFile(filePath);
-                for (int i = 0; i < AESKeys.KeyList.Count; i++)
+                var decryptionState = upkFile.Decrypt(output);
+                if (decryptionState == DecryptionState.Failed)
                 {
-                    try
-                    {
-                        var key = AESKeys.KeyList[i];
-                        upkFile.Decrypt(new RLDecryptor().GetCryptoTransform(key), output);
-                        AESKeys.KeyListSuccessCount[i] += 1;
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        if (i + 1 != AESKeys.KeyList.Count)
-                        {
-                            continue;
-                        }else
-                        {
-                            string fileName = Path.GetFileNameWithoutExtension(filePath);
-                            Console.WriteLine($"{fileName}: Unable to decrypt. possibly wrong AES-key");
-                            output.Close();
-                            File.Delete(outputPath);
-                        }
-                        
-                    }
+                    string fileName = Path.GetFileNameWithoutExtension(filePath);
+                    Console.WriteLine($"{fileName}: Unable to decrypt. possibly wrong AES-key");
+                    output.Close();
+                    File.Delete(outputPath);
+                    //throw new InvalidDataException("Did not mange to decrypt the package");
                 }
-                
+                //for (int i = 0; i < AESKeys.KeyList.Count; i++)
+                //{
+                //    try
+                //    {
+                //        var key = AESKeys.KeyList[i];
+                //        upkFile.Decrypt(new RLDecryptor().GetCryptoTransform(key), output);
+                //        AESKeys.KeyListSuccessCount[i] += 1;
+                //        break;
+                //    }
+                //    catch (Exception e)
+                //    {
+                //        if (i + 1 != AESKeys.KeyList.Count)
+                //        {
+                //            continue;
+                //        }else
+                //        {
+                //            string fileName = Path.GetFileNameWithoutExtension(filePath);
+                //            Console.WriteLine($"{fileName}: Unable to decrypt. possibly wrong AES-key");
+                //            output.Close();
+                //            File.Delete(outputPath);
+                //        }
+
+                //    }
+                //}
+
             }
         }
 
