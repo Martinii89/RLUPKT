@@ -24,7 +24,8 @@ namespace RLUPKT.Core
     {
         None = 0,
         Success = 1,
-        Failed = 2,
+        NoMatchingKeys = 2,
+        FileMissing
     }
 
     public class UPKFile
@@ -114,7 +115,12 @@ namespace RLUPKT.Core
                     AESKeys.KeyListSuccessCount[i] += 1;
                     return DecryptionState.Success;
                 }
-                catch (Exception)
+                catch (FileNotFoundException e)
+                {
+                    Console.WriteLine($"Missing file!: {e.FileName}");
+                    return DecryptionState.FileMissing;
+                }
+                catch (Exception e)
                 {
                     if (i + 1 != AESKeys.KeyList.Count)
                     {
@@ -122,14 +128,14 @@ namespace RLUPKT.Core
                     }
                     else
                     {
-                        return DecryptionState.Failed;
+                        return DecryptionState.NoMatchingKeys;
                     }
 
                 }
             }
 
 
-            return DecryptionState.Failed;
+            return DecryptionState.NoMatchingKeys;
         }
 
         private byte[] DecryptData(ICryptoTransform decryptor)

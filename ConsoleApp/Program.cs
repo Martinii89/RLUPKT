@@ -15,39 +15,13 @@ namespace RLUPKT.ConsoleApp
             {
                 var upkFile = new UPKFile(filePath);
                 var decryptionState = upkFile.Decrypt(output);
-                if (decryptionState == DecryptionState.Failed)
+                if (decryptionState == DecryptionState.NoMatchingKeys)
                 {
                     string fileName = Path.GetFileNameWithoutExtension(filePath);
                     Console.WriteLine($"{fileName}: Unable to decrypt. possibly wrong AES-key");
                     output.Close();
                     File.Delete(outputPath);
-                    //throw new InvalidDataException("Did not mange to decrypt the package");
                 }
-                //for (int i = 0; i < AESKeys.KeyList.Count; i++)
-                //{
-                //    try
-                //    {
-                //        var key = AESKeys.KeyList[i];
-                //        upkFile.Decrypt(new RLDecryptor().GetCryptoTransform(key), output);
-                //        AESKeys.KeyListSuccessCount[i] += 1;
-                //        break;
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        if (i + 1 != AESKeys.KeyList.Count)
-                //        {
-                //            continue;
-                //        }else
-                //        {
-                //            string fileName = Path.GetFileNameWithoutExtension(filePath);
-                //            Console.WriteLine($"{fileName}: Unable to decrypt. possibly wrong AES-key");
-                //            output.Close();
-                //            File.Delete(outputPath);
-                //        }
-
-                //    }
-                //}
-
             }
         }
 
@@ -59,10 +33,13 @@ namespace RLUPKT.ConsoleApp
                 return;
             }
 
+            if (File.Exists("keys.txt"))
+            {
+                AESKeys.InitKeysFromFile("keys.txt");
+            }
+
             var inputFolder = args[1];
             var outputFolder = args[3];
-            Console.WriteLine(inputFolder);
-            Console.WriteLine(outputFolder);
             foreach (var file in Directory.EnumerateFiles(inputFolder, "*.upk"))
             {
                 if (file.EndsWith("_decrypted.upk"))
@@ -70,10 +47,14 @@ namespace RLUPKT.ConsoleApp
                     Console.Error.WriteLine("File is already decrypted.");
                     continue;
                 }
+                if (file.Contains("RefShaderCache"))
+                {
+                    Console.WriteLine("Skipping shadercache");
+                    continue;
+                }
                 var inputFileName = Path.GetFileNameWithoutExtension(file);
                 var outputFilePath = Path.Combine(outputFolder, inputFileName + "_decrypted.upk");
                 new FileInfo(outputFilePath).Directory.Create();
-                //Console.WriteLine($"Processing: {inputFileName}");
                 try
                 {
                     ProcessFile(file, outputFilePath);

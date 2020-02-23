@@ -6,10 +6,11 @@
     <Company />
     <AssemblyName>RLUPKT.Core</AssemblyName>
     <RootNamespace>RLUPKT.Core</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ICSharpCode.SharpZipLib.dll" Version="0.85.4.369" />
+    <PackageReference Include="SharpZipLib" Version="1.2.0" />
   </ItemGroup>
 
 </Project>
