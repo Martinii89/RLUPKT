@@ -33,11 +33,6 @@ namespace RLUPKT.ConsoleApp
                 return;
             }
 
-            if (File.Exists("keys.txt"))
-            {
-                AESKeys.InitKeysFromFile("keys.txt");
-            }
-
             var inputFolder = args[1];
             var outputFolder = args[3];
             foreach (var file in Directory.EnumerateFiles(inputFolder, "*.upk"))

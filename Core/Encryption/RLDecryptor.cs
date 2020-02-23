@@ -22,14 +22,9 @@ namespace RLUPKT.Core.Encryption
         public static List<byte[]> KeyList = new List<byte[]> { };
         public static List<int> KeyListSuccessCount = new List<int> { };
 
-        public static void InitKeysFromFile(string file)
+        private static void InitKeysFromFile(string file)
         {
             var keys = GetKeysFromFile(file);
-
-            // Add the default key
-            KeyList.Add(AESKey1);
-            KeyListSuccessCount.Add(0);
-
             // Add keys from the file
             KeyList.AddRange(keys);
             KeyListSuccessCount.AddRange(KeyList.Select(item => 0));
@@ -44,6 +39,18 @@ namespace RLUPKT.Core.Encryption
                 keys.Add(Convert.FromBase64String(key));
             }
             return keys;
+        }
+
+        internal static void InitKeys()
+        {
+            // Add the default key
+            KeyList.Add(AESKey1);
+            KeyListSuccessCount.Add(0);
+
+            if (File.Exists("keys.txt"))
+            {
+                InitKeysFromFile("keys.txt");
+            }
         }
     }
 

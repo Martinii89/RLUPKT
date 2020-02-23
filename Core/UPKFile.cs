@@ -25,7 +25,7 @@ namespace RLUPKT.Core
         None = 0,
         Success = 1,
         NoMatchingKeys = 2,
-        FileMissing
+        FileMissing = 3
     }
 
     public class UPKFile
@@ -106,6 +106,10 @@ namespace RLUPKT.Core
 
         public DecryptionState Decrypt<T>(T outputStream) where T : Stream
         {
+            if (AESKeys.KeyList.Count == 0)
+            {
+                AESKeys.InitKeys();
+            }
             for (int i = 0; i < AESKeys.KeyList.Count; i++)
             {
                 try
@@ -120,7 +124,7 @@ namespace RLUPKT.Core
                     Console.WriteLine($"Missing file!: {e.FileName}");
                     return DecryptionState.FileMissing;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     if (i + 1 != AESKeys.KeyList.Count)
                     {
